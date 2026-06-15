@@ -1,0 +1,312 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>AMZ Tools Client</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        font-size: 13px;
+        background: transparent;
+        color: #111827;
+        min-width: 260px;
+        max-width: 360px;
+      }
+
+      .stz-card {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+      }
+
+      .stz-header {
+        background: linear-gradient(135deg, #2563eb, #6366f1);
+        color: #ffffff;
+        padding: 10px 12px 12px;
+        text-align: center;
+      }
+
+      .stz-header-title {
+        font-size: 15px;
+        font-weight: 700;
+        margin: 0;
+        margin-bottom: 2px;
+      }
+
+      .stz-header-sub {
+        margin: 0;
+        font-size: 11px;
+        opacity: 0.9;
+      }
+
+      .stz-body {
+        padding: 10px 12px 12px;
+      }
+
+      .stz-status-card {
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: 12px;
+        text-align: center;
+        margin-bottom: 8px;
+        border: 1px solid transparent;
+      }
+
+      .stz-status-ok {
+        background: #dcfce7;
+        border-color: #bbf7d0;
+        color: #166534;
+      }
+
+      .stz-status-err {
+        background: #fef2f2;
+        border-color: #fecaca;
+        color: #7f1d1d;
+      }
+
+      .stz-status-title {
+        font-weight: 600;
+        margin-bottom: 2px;
+      }
+
+      .stz-status-sub {
+        font-size: 11px;
+        opacity: 0.9;
+      }
+
+      .stz-btn {
+        width: 100%;
+        border-radius: 999px;
+        padding: 9px 12px;
+        font-size: 13px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 6px;
+        transition: background 0.15s ease, box-shadow 0.15s ease,
+          transform 0.05s ease;
+      }
+
+      .stz-btn:active {
+        transform: translateY(1px);
+      }
+
+      .stz-btn-primary {
+        background: #2563eb;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+      }
+
+      .stz-btn-primary:hover {
+        background: #1d4ed8;
+      }
+
+      .stz-btn-secondary {
+        background: #ff9900;
+        color: #111827;
+        box-shadow: 0 3px 10px rgba(249, 115, 22, 0.4);
+      }
+
+      .stz-btn-secondary:hover {
+        background: #f97316;
+      }
+
+      .stz-btn-outline {
+        background: #ffffff;
+        color: #111827;
+        border: 1px solid #d1d5db;
+        box-shadow: none;
+      }
+
+      .stz-btn-outline:hover {
+        background: #f9fafb;
+      }
+
+      .stz-btn-sm {
+        font-size: 12px;
+        padding: 7px 10px;
+        margin-top: 4px;
+      }
+
+      .stz-section-label {
+        margin-top: 10px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #6b7280;
+        font-weight: 600;
+      }
+
+      .stz-amz-list {
+        margin-top: 4px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .stz-browser-wrap {
+        margin-top: 12px;
+        text-align: center;
+      }
+
+      .stz-browser-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #6b7280;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .stz-btn-browser {
+        width: auto;
+        min-width: 180px;
+        padding-left: 16px;
+        padding-right: 16px;
+        margin-left: auto;
+        margin-right: auto;
+        display: flex;
+      }
+
+      .stz-version {
+        margin-top: 10px;
+        font-size: 11px;
+        text-align: center;
+        color: #9ca3af;
+      }
+</style>
+  </head>
+  <body>
+    <div class="stz-card">
+      <div class="stz-header">
+        <h1 class="stz-header-title">AMZ Tools Client</h1>
+        <p class="stz-header-sub">Access tools & Amazon by one click</p>
+      </div>
+
+      <div class="stz-body">
+        
+        <div
+          id="stz-status-card"
+          class="stz-status-card stz-status-err"
+        >
+          <div id="stz-status-title" class="stz-status-title">
+            Checking connection…
+          </div>
+          <div id="stz-status-sub" class="stz-status-sub">
+            Please wait
+          </div>
+        </div>
+
+        
+        <button
+          id="stz-btn-member"
+          type="button"
+          class="stz-btn stz-btn-primary"
+        >
+          Members Area
+        </button>
+
+        
+        <div class="stz-section-label">Amazon Marketplaces</div>
+        <div class="stz-amz-list">
+          <button
+            id="stz-amz-us"
+            type="button"
+            class="stz-btn stz-btn-secondary stz-btn-sm"
+          >
+            Amazon.com (US)
+          </button>
+          <button
+            id="stz-amz-uk"
+            type="button"
+            class="stz-btn stz-btn-secondary stz-btn-sm"
+          >
+            Amazon.co.uk (UK)
+          </button>
+          <button
+            id="stz-amz-de"
+            type="button"
+            class="stz-btn stz-btn-secondary stz-btn-sm"
+          >
+            Amazon.de (Germany)
+          </button>
+          <button
+            id="stz-amz-fr"
+            type="button"
+            class="stz-btn stz-btn-secondary stz-btn-sm"
+          >
+            Amazon.fr (France)
+          </button>
+          <button
+            id="stz-amz-it"
+            type="button"
+            class="stz-btn stz-btn-secondary stz-btn-sm"
+          >
+            Amazon.it (Italy)
+          </button>
+          <button
+            id="stz-amz-es"
+            type="button"
+            class="stz-btn stz-btn-secondary stz-btn-sm"
+          >
+            Amazon.es (Spain)
+          </button>
+          <button
+            id="stz-amz-ca"
+            type="button"
+            class="stz-btn stz-btn-secondary stz-btn-sm"
+          >
+            Amazon.ca (Canada)
+          </button>
+          <button
+            id="stz-amz-jp"
+            type="button"
+            class="stz-btn stz-btn-secondary stz-btn-sm"
+          >
+            Amazon.co.jp (Japan)
+          </button>
+          <button
+            id="stz-amz-in"
+            type="button"
+            class="stz-btn stz-btn-secondary stz-btn-sm"
+          >
+            Amazon.in (India)
+          </button>
+          <button
+            id="stz-amz-au"
+            type="button"
+            class="stz-btn stz-btn-secondary stz-btn-sm"
+          >
+            Amazon.com.au (Australia)
+          </button>
+        </div>
+
+        
+        <div class="stz-browser-wrap">
+          <div class="stz-browser-label">Browser</div>
+          <button
+            id="stz-btn-cookies"
+            type="button"
+            class="stz-btn stz-btn-outline stz-btn-sm stz-btn-browser"
+          >
+            Clear Amazon Cookies
+          </button>
+        </div>
+
+        <div id="stz-version" class="stz-version"></div>
+      </div>
+    </div>
+
+    <script src="popup-amztools-core.js"></script>
+  </body>
+</html>

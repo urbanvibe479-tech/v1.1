@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "AMZ Tools Extension 1",
+  "version": "1.1",
+  "description": "AMZ Tools Extension 1 - secure client for AMZ Tools access.",
+  "action": {
+    "default_title": "AMZ Tools Extension 1",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "logo.png",
+      "48": "logo.png",
+      "128": "logo.png"
+    }
+  },
+  "icons": {
+    "16": "logo.png",
+    "48": "logo.png",
+    "128": "logo.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "alarms",
+    "browsingData",
+    "cookies",
+    "management",
+    "privacy",
+    "scripting",
+    "storage",
+    "tabs",
+    "webNavigation"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://amztools.org/*",
+        "https://www.amztools.org/*"
+      ],
+      "js": [
+        "content-script.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAukf/REt66cP/Dxi5XtEUCeusB2FuxC3BNzRBV5t8jQscwn1VHA/D4+4bnYcW9Yn9Cy+tKNojo6anW5DNRen2oZW5qQeKTJwstM/eHr9vhFaP9EXRuzyOsQsOMsIhS53GrDUiFNGvQc3amSQ0NM2jc7i1Dgacqv5DBK3KKiKOq5HAONIm5wvn34U19B2NJfewq0QnU9VS1Z+ubJSgPTHQ88z77ZavWDKtRdUmptjg1xEJtyzgZ0vGoHZoPGNjzL9Saxc0t4jNi9bj6VPIO0yevjJfx3RhTLV6/q2//j80sk864ZRSIgEghH86KUx/wNBbZEK4SEzNhdJzAL99ASZKfQIDAQAB"
+}

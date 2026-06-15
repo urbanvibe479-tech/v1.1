@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "AMZ Tools Extension 2",
+  "version": "1.1",
+  "description": "AMZ Tools Extension 2 - security partner for AMZ Tools access.",
+  "action": {
+    "default_title": "AMZ Tools Extension 2",
+    "default_icon": {
+      "16": "logo.png",
+      "48": "logo.png",
+      "128": "logo.png"
+    }
+  },
+  "icons": {
+    "16": "logo.png",
+    "48": "logo.png",
+    "128": "logo.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "alarms",
+    "browsingData",
+    "cookies",
+    "management",
+    "scripting",
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmdRMpVKZtweVzB4ZbKnZ3XEWID47IUpfO0vGKfoIReyLrRaEP26aaJWf2GMHsDBneWqPJ4+PjUO14pJHFF/rznpkafvYUketH4VfSXnuJNaOxZ5EaaBOj5KWuCF6DGylPcTdrotiI7mhGImT/qSr7dlq11YkVM/rffnkQidVy+qQv8d430hkfIHUvK/OmOEvC98pNhumUgalcXdGvXlyYQnLgcb2T6qdTIZU2J+17EDuH35koIZwN182lF7iMHVuDjPh9umNDCdtaq5cmv6ae9yrs1lcC6glLcUDVBx5WpAqsOBBFlYf6WfF7g3DBFoqWerRsvyBqKT4HZHP1zI4dQIDAQAB",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://amztools.org/*",
+        "https://www.amztools.org/*"
+      ],
+      "js": [
+        "content-script.js"
+      ],
+      "run_at": "document_start"
+    }
+  ]
+}
