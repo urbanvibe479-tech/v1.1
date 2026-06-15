@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
+      - name: Checkout files
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -17,108 +17,154 @@ jobs:
           node-version: '20'
 
       - name: Install obfuscator
-        run: npm install -g javascript-obfuscator@4.1.1
+        run: npm install javascript-obfuscator@latest
+
+      - name: Create safe obfuscation runner
+        run: |
+          cat > obfuscate-one.js <<'EOF'
+          const fs = require('fs');
+          const JavaScriptObfuscator = require('javascript-obfuscator');
+
+          const file = process.argv[2];
+          if (!file) {
+            console.error('Missing JS file path');
+            process.exit(1);
+          }
+
+          const input = fs.readFileSync(file, 'utf8');
+
+          const result = JavaScriptObfuscator.obfuscate(input, {
+            compact: true,
+            controlFlowFlattening: true,
+            controlFlowFlatteningThreshold: 0.20,
+            deadCodeInjection: true,
+            deadCodeInjectionThreshold: 0.06,
+            debugProtection: false,
+            debugProtectionInterval: 0,
+            disableConsoleOutput: false,
+            identifierNamesGenerator: 'hexadecimal',
+            log: false,
+            numbersToExpressions: false,
+            renameGlobals: false,
+            selfDefending: false,
+            simplify: true,
+            splitStrings: true,
+            splitStringsChunkLength: 8,
+            stringArray: true,
+            stringArrayCallsTransform: false,
+            stringArrayEncoding: ['base64'],
+            stringArrayIndexShift: true,
+            stringArrayRotate: true,
+            stringArrayShuffle: true,
+            stringArrayWrappersCount: 1,
+            stringArrayWrappersChainedCalls: true,
+            stringArrayWrappersParametersMaxCount: 2,
+            stringArrayWrappersType: 'variable',
+            stringArrayThreshold: 0.70,
+            transformObjectKeys: false,
+            unicodeEscapeSequence: false,
+            reservedNames: [
+              '^chrome$',
+              '^browser$',
+              '^document$',
+              '^window$',
+              '^localStorage$',
+              '^sessionStorage$',
+              '^fetch$',
+              '^Headers$',
+              '^Request$',
+              '^Response$',
+              '^URL$',
+              '^URLSearchParams$',
+              '^MutationObserver$',
+              '^CustomEvent$',
+              '^Event$'
+            ]
+          });
+
+          let output = result.getObfuscatedCode();
+
+          const noticeMatch = input.match(/^\/\*![\s\S]*?\*\//);
+          if (noticeMatch && !output.startsWith('/*!')) {
+            output = noticeMatch[0] + '\n' + output;
+          }
+
+          fs.writeFileSync(file, output, 'utf8');
+          console.log('Obfuscated:', file);
+          EOF
 
       - name: Obfuscate JavaScript files - medium safe
         shell: bash
         run: |
           set -euo pipefail
 
-          find . -type f -name "*.js" \
-            ! -path "*/.git/*" \
-            ! -path "*/node_modules/*" \
-            ! -path "*/dist/*" \
-            ! -path "*/build/*" \
-            ! -name "*.min.js" \
-            -print0 | while IFS= read -r -d '' file; do
-              echo "Obfuscating: $file"
-
-              javascript-obfuscator "$file" --output "$file.obf" \
-                --target browser \
-                --compact true \
-                --identifier-names-generator hexadecimal \
-                --rename-globals false \
-                --string-array true \
-                --string-array-encoding base64 \
-                --string-array-threshold 0.65 \
-                --rotate-string-array true \
-                --shuffle-string-array true \
-                --split-strings true \
-                --split-strings-chunk-length 8 \
-                --control-flow-flattening true \
-                --control-flow-flattening-threshold 0.20 \
-                --dead-code-injection true \
-                --dead-code-injection-threshold 0.06 \
-                --numbers-to-expressions true \
-                --simplify true \
-                --transform-object-keys false \
-                --self-defending false \
-                --debug-protection false \
-                --disable-console-output false \
-                --unicode-escape-sequence false \
-                --comments "/^!/"
-
-              mv "$file.obf" "$file"
-            done
+          while IFS= read -r file; do
+            echo "Obfuscating: $file"
+            node obfuscate-one.js "$file"
+          done < <(find . \
+            -type f \
+            -name "*.js" \
+            ! -name "obfuscate-one.js" \
+            ! -path "./node_modules/*" \
+            ! -path "./.github/*")
 
       - name: Minify manifest.json to one line
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
 
-          for path in Path('.').rglob('manifest.json'):
-              if any(part in {'.git', 'node_modules', 'dist', 'build'} for part in path.parts):
-                  continue
-              with path.open('r', encoding='utf-8') as f:
-                  data = json.load(f)
-              with path.open('w', encoding='utf-8') as f:
-                  f.write(json.dumps(data, separators=(',', ':'), ensure_ascii=False))
-              print(f'Minified manifest: {path}')
-          PY
+          while IFS= read -r file; do
+            echo "Minifying manifest: $file"
+            node -e "const fs=require('fs'); const f=process.argv[1]; const j=JSON.parse(fs.readFileSync(f,'utf8')); fs.writeFileSync(f, JSON.stringify(j));" "$file"
+          done < <(find . \
+            -type f \
+            -name "manifest.json" \
+            ! -path "./node_modules/*" \
+            ! -path "./.github/*")
 
       - name: Verify JavaScript syntax
         shell: bash
         run: |
           set -euo pipefail
-          find . -type f -name "*.js" \
-            ! -path "*/.git/*" \
-            ! -path "*/node_modules/*" \
-            ! -path "*/dist/*" \
-            ! -path "*/build/*" \
-            -print0 | while IFS= read -r -d '' file; do
-              node --check "$file"
-            done
+
+          while IFS= read -r file; do
+            echo "Checking JS syntax: $file"
+            node --check "$file"
+          done < <(find . \
+            -type f \
+            -name "*.js" \
+            ! -name "obfuscate-one.js" \
+            ! -path "./node_modules/*" \
+            ! -path "./.github/*")
 
       - name: Verify manifest JSON
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
 
-          for path in Path('.').rglob('manifest.json'):
-              if any(part in {'.git', 'node_modules', 'dist', 'build'} for part in path.parts):
-                  continue
-              with path.open('r', encoding='utf-8') as f:
-                  json.load(f)
-              print(f'Valid manifest: {path}')
-          PY
+          while IFS= read -r file; do
+            echo "Checking manifest JSON: $file"
+            node -e "JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'))" "$file"
+          done < <(find . \
+            -type f \
+            -name "manifest.json" \
+            ! -path "./node_modules/*" \
+            ! -path "./.github/*")
 
       - name: Create final ZIP
         shell: bash
         run: |
-          set -euo pipefail
-          zip -r AMZTools_Extensions_Obfuscated_Final.zip . \
-            -x "*.git*" \
-            -x "*node_modules*" \
-            -x "AMZTools_Extensions_Obfuscated_Final.zip"
+          rm -f AMZ-Tools-v1.1-Medium-Obfuscated.zip
+          zip -r AMZ-Tools-v1.1-Medium-Obfuscated.zip . \
+            -x ".git/*" \
+            -x ".github/*" \
+            -x "node_modules/*" \
+            -x "package.json" \
+            -x "package-lock.json" \
+            -x "obfuscate-one.js"
 
       - name: Upload obfuscated package
         uses: actions/upload-artifact@v4
         with:
-          name: AMZTools_Extensions_Obfuscated_Final
-          path: AMZTools_Extensions_Obfuscated_Final.zip
+          name: AMZ-Tools-v1.1-Medium-Obfuscated
+          path: AMZ-Tools-v1.1-Medium-Obfuscated.zip
