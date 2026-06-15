@@ -1,0 +1,124 @@
+name: AMZ Tools Medium Obfuscation
+
+on:
+  workflow_dispatch:
+
+jobs:
+  obfuscate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install obfuscator
+        run: npm install -g javascript-obfuscator@4.1.1
+
+      - name: Obfuscate JavaScript files - medium safe
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          find . -type f -name "*.js" \
+            ! -path "*/.git/*" \
+            ! -path "*/node_modules/*" \
+            ! -path "*/dist/*" \
+            ! -path "*/build/*" \
+            ! -name "*.min.js" \
+            -print0 | while IFS= read -r -d '' file; do
+              echo "Obfuscating: $file"
+
+              javascript-obfuscator "$file" --output "$file.obf" \
+                --target browser \
+                --compact true \
+                --identifier-names-generator hexadecimal \
+                --rename-globals false \
+                --string-array true \
+                --string-array-encoding base64 \
+                --string-array-threshold 0.65 \
+                --rotate-string-array true \
+                --shuffle-string-array true \
+                --split-strings true \
+                --split-strings-chunk-length 8 \
+                --control-flow-flattening true \
+                --control-flow-flattening-threshold 0.20 \
+                --dead-code-injection true \
+                --dead-code-injection-threshold 0.06 \
+                --numbers-to-expressions true \
+                --simplify true \
+                --transform-object-keys false \
+                --self-defending false \
+                --debug-protection false \
+                --disable-console-output false \
+                --unicode-escape-sequence false \
+                --comments "/^!/"
+
+              mv "$file.obf" "$file"
+            done
+
+      - name: Minify manifest.json to one line
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          for path in Path('.').rglob('manifest.json'):
+              if any(part in {'.git', 'node_modules', 'dist', 'build'} for part in path.parts):
+                  continue
+              with path.open('r', encoding='utf-8') as f:
+                  data = json.load(f)
+              with path.open('w', encoding='utf-8') as f:
+                  f.write(json.dumps(data, separators=(',', ':'), ensure_ascii=False))
+              print(f'Minified manifest: {path}')
+          PY
+
+      - name: Verify JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          find . -type f -name "*.js" \
+            ! -path "*/.git/*" \
+            ! -path "*/node_modules/*" \
+            ! -path "*/dist/*" \
+            ! -path "*/build/*" \
+            -print0 | while IFS= read -r -d '' file; do
+              node --check "$file"
+            done
+
+      - name: Verify manifest JSON
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          for path in Path('.').rglob('manifest.json'):
+              if any(part in {'.git', 'node_modules', 'dist', 'build'} for part in path.parts):
+                  continue
+              with path.open('r', encoding='utf-8') as f:
+                  json.load(f)
+              print(f'Valid manifest: {path}')
+          PY
+
+      - name: Create final ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          zip -r AMZTools_Extensions_Obfuscated_Final.zip . \
+            -x "*.git*" \
+            -x "*node_modules*" \
+            -x "AMZTools_Extensions_Obfuscated_Final.zip"
+
+      - name: Upload obfuscated package
+        uses: actions/upload-artifact@v4
+        with:
+          name: AMZTools_Extensions_Obfuscated_Final
+          path: AMZTools_Extensions_Obfuscated_Final.zip
